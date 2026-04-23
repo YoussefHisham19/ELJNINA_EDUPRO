@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منشئ الاختبارات – Eljnina</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --green:#10b981;--green-d:#059669;--violet:#7c3aed;--violet-d:#6d28d9;
+      --amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+      --s900:#0f172a;--s800:#1e293b;--s700:#334155;--s500:#64748b;
+      --s400:#94a3b8;--s200:#e2e8f0;--s100:#f1f5f9;--s50:#f8fafc;--w:#fff;
+      --r:1.25rem;
+    }
+    body{font-family:'Cairo',sans-serif;background:var(--s50);color:var(--s900);min-height:100vh}
+
+    /* NAV */
+    .nav{height:64px;background:var(--w);border-bottom:1px solid var(--s200);
+      display:flex;align-items:center;justify-content:space-between;padding:0 2rem;
+      position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .nav-brand{display:flex;align-items:center;gap:.75rem}
+    .nav-logo{width:40px;height:40px;background:var(--violet);border-radius:12px;
+      display:flex;align-items:center;justify-content:center;color:var(--w);font-size:1.2rem;
+      box-shadow:0 0 20px rgba(124,58,237,.3)}
+    .nav-title{font-size:1rem;font-weight:900;color:var(--s900)}
+    .nav-title span{color:var(--violet)}
+    .nav-back{font-size:.75rem;font-weight:700;color:var(--s500);text-decoration:none;
+      padding:.4rem .9rem;border:1.5px solid var(--s200);border-radius:999px;transition:all .2s}
+    .nav-back:hover{border-color:var(--violet);color:var(--violet)}
+
+    /* LAYOUT */
+    .page{display:grid;grid-template-columns:1fr 380px;gap:2rem;max-width:1200px;
+      margin:0 auto;padding:2rem;min-height:calc(100vh - 64px)}
+    @media(max-width:900px){.page{grid-template-columns:1fr}}
+
+    /* CARDS */
+    .card{background:var(--w);border-radius:2rem;padding:2rem;border:1.5px solid var(--s100);
+      box-shadow:0 4px 24px rgba(0,0,0,.06)}
+    .card-title{font-size:1.1rem;font-weight:900;color:var(--s900);margin-bottom:1.5rem;
+      display:flex;align-items:center;gap:.6rem}
+    .badge{display:inline-flex;align-items:center;justify-content:center;
+      width:28px;height:28px;border-radius:8px;font-size:.8rem}
+    .badge-violet{background:rgba(124,58,237,.1);color:var(--violet)}
+    .badge-green{background:rgba(16,185,129,.1);color:var(--green)}
+    .badge-amber{background:rgba(245,158,11,.1);color:var(--amber)}
+
+    /* FORM ELEMENTS */
+    label{display:block;font-size:.65rem;font-weight:900;text-transform:uppercase;
+      letter-spacing:.15em;color:var(--s400);margin-bottom:.5rem}
+    input[type=text],input[type=number],textarea,select{
+      width:100%;padding:.75rem 1rem;background:var(--s50);border:2px solid var(--s100);
+      border-radius:.875rem;outline:none;font-family:'Cairo',sans-serif;font-size:.875rem;
+      font-weight:600;color:var(--s900);transition:border .2s;resize:vertical}
+    input:focus,textarea:focus,select:focus{border-color:var(--violet)}
+    input::placeholder,textarea::placeholder{color:var(--s400)}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+      padding:.75rem 1.5rem;border-radius:999px;font-family:'Cairo',sans-serif;
+      font-size:.875rem;font-weight:900;cursor:pointer;border:none;transition:all .2s}
+    .btn:active{transform:scale(.97)}
+    .btn-violet{background:var(--violet);color:var(--w);box-shadow:0 6px 20px rgba(124,58,237,.25)}
+    .btn-violet:hover{background:var(--violet-d)}
+    .btn-green{background:var(--green);color:var(--w);box-shadow:0 6px 20px rgba(16,185,129,.25)}
+    .btn-green:hover{background:var(--green-d)}
+    .btn-outline{background:transparent;border:2px solid var(--s200);color:var(--s500)}
+    .btn-outline:hover{border-color:var(--violet);color:var(--violet)}
+    .btn-sm{padding:.5rem 1rem;font-size:.75rem}
+    .btn-red{background:rgba(239,68,68,.1);color:var(--red);border:none}
+    .btn-red:hover{background:var(--red);color:var(--w)}
+    .btn-full{width:100%}
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+    /* QUESTION BUILDER */
+    .q-card{background:var(--s50);border:2px solid var(--s100);border-radius:1.25rem;
+      padding:1.25rem;margin-bottom:1rem;position:relative;transition:border .2s}
+    .q-card:hover{border-color:var(--violet)}
+    .q-num{position:absolute;top:1rem;right:1rem;width:26px;height:26px;
+      background:var(--violet);color:var(--w);border-radius:8px;
+      font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center}
+    .q-remove{position:absolute;top:1rem;left:1rem;background:none;border:none;
+      color:var(--s400);cursor:pointer;font-size:1.1rem;transition:color .2s;padding:.25rem}
+    .q-remove:hover{color:var(--red)}
+    .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+    .option-row{display:flex;align-items:center;gap:.5rem}
+    .option-label{font-size:.7rem;font-weight:900;color:var(--s500);
+      width:22px;height:22px;background:var(--s100);border-radius:6px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .correct-sel{width:100%;padding:.5rem .75rem;background:var(--s50);
+      border:2px solid var(--s100);border-radius:.75rem;font-family:'Cairo',sans-serif;
+      font-size:.75rem;font-weight:700;color:var(--s900);outline:none;cursor:pointer}
+    .correct-sel:focus{border-color:var(--green)}
+
+    /* EXAM LIST */
+    .exam-item{border:1.5px solid var(--s100);border-radius:1.25rem;padding:1.25rem;
+      margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;transition:all .2s;cursor:default}
+    .exam-item:hover{border-color:var(--violet);box-shadow:0 4px 16px rgba(124,58,237,.08)}
+    .exam-meta{font-size:.65rem;color:var(--s400);font-weight:700;margin-top:.25rem}
+    .exam-actions{display:flex;gap:.5rem;flex-shrink:0}
+
+    /* STATS ROW */
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+    .stat-box{background:var(--w);border:1.5px solid var(--s100);border-radius:1.25rem;
+      padding:1rem;text-align:center}
+    .stat-num{font-size:1.75rem;font-weight:900;line-height:1}
+    .stat-lbl{font-size:.6rem;font-weight:900;text-transform:uppercase;
+      letter-spacing:.12em;color:var(--s400);margin-top:.25rem}
+
+    /* URL BOX */
+    .url-box{background:rgba(124,58,237,.04);border:2px solid rgba(124,58,237,.15);
+      border-radius:1rem;padding:1rem;margin-top:1rem}
+    .url-text{font-size:.65rem;font-family:monospace;color:var(--violet);
+      word-break:break-all;margin-bottom:.5rem}
+    .copy-row{display:flex;gap:.5rem}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(2rem);
+      background:var(--s900);color:var(--w);padding:.75rem 1.75rem;border-radius:999px;
+      font-size:.8rem;font-weight:700;opacity:0;transition:all .3s;z-index:999;
+      pointer-events:none;white-space:nowrap}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    .space-y>*+*{margin-top:1rem}
+    .mt1{margin-top:1rem}.mt2{margin-top:1.5rem}
+    .flex{display:flex}.items-center{align-items:center}.gap1{gap:.5rem}.gap2{gap:1rem}
+    .justify-between{justify-content:space-between}
+    .text-green{color:var(--green)}.text-violet{color:var(--violet)}
+    .text-red{color:var(--red)}.text-sm{font-size:.875rem}.font-bold{font-weight:700}
+    .text-xs{font-size:.75rem}.text-s400{color:var(--s400)}
+    .hidden{display:none!important}
+    .empty-state{text-align:center;padding:3rem 1rem;color:var(--s400)}
+    .empty-state .icon{font-size:3rem;margin-bottom:1rem}
+    .empty-state p{font-size:.875rem;font-weight:600}
+  </style>
+</head>
+<body>
+
+<div id="navbar-container" style="display:none"></div>
+<div id="toast"></div>
+
+<div id="toast"></div>
+
+<div class="page">
+
+  <!-- LEFT: BUILDER -->
+  <div>
+
+    <!-- STEP 1: Exam Info -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title"><span class="badge badge-violet">١</span> معلومات الاختبار</div>
+      <div class="space-y">
+        <div>
+          <label>عنوان الاختبار</label>
+          <input type="text" id="exam-title" placeholder="مثال: اختبار الفصل الأول – رياضيات">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div>
+            <label>المدة (بالدقائق)</label>
+            <input type="number" id="exam-duration" value="30" min="1" max="180">
+          </div>
+          <div>
+            <label>ترتيب الأسئلة</label>
+            <select id="exam-shuffle">
+              <option value="0">ثابت (كما أضفتها)</option>
+              <option value="1">عشوائي (anti-cheat)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label>وصف / تعليمات (اختياري)</label>
+          <textarea id="exam-desc" rows="2" placeholder="اقرأ الأسئلة جيداً قبل الإجابة..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Questions -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title"><span class="badge badge-violet">٢</span> الأسئلة</div>
+      <div id="questions-container"></div>
+      <button class="btn btn-outline btn-full mt1" id="add-q-btn">+ إضافة سؤال</button>
+    </div>
+
+    <!-- STEP 3: Publish -->
+    <div class="card">
+      <div class="card-title"><span class="badge badge-green">٣</span> نشر الاختبار</div>
+      <p class="text-xs text-s400 font-bold" style="margin-bottom:1rem;line-height:1.7">
+        بعد النشر سيُولَّد رابط الاختبار الخاص بطلابك. يمكنك مشاركته مباشرة أو عبر واتساب.
+      </p>
+      <button class="btn btn-green btn-full" id="publish-btn">⚡ نشر الاختبار الآن</button>
+      <div id="publish-result" class="hidden">
+        <div class="url-box">
+          <p class="text-xs font-bold text-violet" style="margin-bottom:.4rem">🔗 رابط الاختبار للطلاب</p>
+          <p class="url-text" id="exam-url-display"></p>
+          <div class="copy-row">
+            <button class="btn btn-violet btn-sm" id="copy-exam-url">نسخ الرابط</button>
+            <a id="preview-exam-link" href="#" target="_blank" class="btn btn-outline btn-sm">معاينة</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: SIDEBAR -->
+  <div>
+
+    <!-- STATS -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title"><span class="badge badge-amber">📊</span> إحصائيات</div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num text-violet" id="stat-exams">0</div>
+          <div class="stat-lbl">اختبارات</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num text-green" id="stat-submissions">0</div>
+          <div class="stat-lbl">تسليمات</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num text-amber" id="stat-avg">—</div>
+          <div class="stat-lbl">متوسط %</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAM LIST -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title"><span class="badge badge-violet">📋</span> اختباراتك المنشورة</div>
+      <div id="exams-list">
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <p>لم تنشر أي اختبار بعد</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card">
+      <div class="card-title"><span class="badge badge-green">🏆</span> آخر النتائج</div>
+      <div id="results-list">
+        <div class="empty-state">
+          <div class="icon">📈</div>
+          <p>لا توجد نتائج بعد</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import common from './common.js';
+
+/**
+ * ══════════════════════════════════════════════
+ *  EXAM BUILDER — EDUPRO
+ *  Full exam creation, management & result view
+ * ══════════════════════════════════════════════
+ */
+
+// ── URL / Teacher context ──────────────────────
+const params    = new URLSearchParams(window.location.search);
+const teacherId = params.get('teacher') || 'demo';
+
+// Admin Security Check
+const authorizedId = localStorage.getItem('eljnina_admin_id');
+if (authorizedId !== teacherId) {
+    window.location.href = 'start.html';
+}
+
+common.injectSidebar('exam-builder');
+
+const EXAMS_KEY   = `eljnina_exams_${teacherId}`;
+const RESULTS_KEY = `eljnina_results_${teacherId}`;
+
+// Helper for relative paths
+function basePath() {
+  const href = window.location.href;
+  return href.substring(0, href.lastIndexOf('/') + 1);
+}
+
+
+// ── State ──────────────────────────────────────
+let questions = [];  // current builder state
+let exams     = [];
+let results   = [];
+
+async function initData() {
+  await common.initSupabase();
+  if (common.supabase) {
+    // Fetch exams
+    const { data: exData } = await common.supabase.from('exams').select('*').eq('teacher_id', teacherId).order('created_at', { ascending: false });
+    exams = exData || [];
+    
+    // Fetch results
+    const { data: resData } = await common.supabase.from('results').select('*').eq('teacher_id', teacherId).order('submitted_at', { ascending: false });
+    results = resData || [];
+  } else {
+    // Fallback to localStorage if no Supabase
+    exams   = JSON.parse(localStorage.getItem(EXAMS_KEY)   || '[]');
+    results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
+  }
+  
+  renderExamsList();
+  renderResults();
+  updateStats();
+}
+
+// ── Toast helper ──────────────────────────────
+function toast(msg, ms=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ── Generate short ID ─────────────────────────
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+// ── Render a question block ───────────────────
+function questionHTML(q, idx) {
+  const letters = ['أ','ب','ج','د'];
+  return `
+    <div class="q-card" id="qcard-${idx}">
+      <div class="q-num">${idx+1}</div>
+      <button class="q-remove" onclick="removeQ(${idx})" title="حذف">✕</button>
+      <div style="padding-right:2rem;padding-left:2rem">
+        <label>نص السؤال</label>
+        <textarea rows="2" placeholder="اكتب السؤال هنا..." oninput="updateQ(${idx},'text',this.value)">${q.text||''}</textarea>
+        <div class="options-grid" style="margin-top:.75rem">
+          ${[0,1,2,3].map(i=>`
+            <div class="option-row">
+              <span class="option-label">${letters[i]}</span>
+              <input type="text" placeholder="الخيار ${letters[i]}"
+                value="${(q.options&&q.options[i])||''}"
+                oninput="updateOpt(${idx},${i},this.value)">
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:.75rem">
+          <label>الإجابة الصحيحة</label>
+          <select class="correct-sel" onchange="updateQ(${idx},'correct',+this.value)">
+            ${[0,1,2,3].map(i=>`<option value="${i}" ${(q.correct===i)?'selected':''}>${letters[i]} – ${(q.options&&q.options[i])||'الخيار '+(i+1)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderQuestions() {
+  const c = document.getElementById('questions-container');
+  if (!questions.length) {
+    c.innerHTML = `<div class="empty-state"><div class="icon">❓</div><p>لم تضف أي سؤال بعد</p></div>`;
+    return;
+  }
+  c.innerHTML = questions.map((q,i) => questionHTML(q,i)).join('');
+}
+
+function addQuestion() {
+  questions.push({ text:'', options:['','','',''], correct:0 });
+  renderQuestions();
+  // scroll to last
+  document.querySelectorAll('.q-card').forEach(el => {});
+  const last = document.querySelector('.q-card:last-child');
+  if (last) last.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function removeQ(idx) {
+  questions.splice(idx, 1);
+  renderQuestions();
+}
+
+function updateQ(idx, field, val) {
+  questions[idx][field] = field==='correct' ? +val : val;
+}
+
+function updateOpt(idx, optIdx, val) {
+  if (!questions[idx].options) questions[idx].options = ['','','',''];
+  questions[idx].options[optIdx] = val;
+  // re-render correct select labels
+  const sel = document.querySelector(`#qcard-${idx} .correct-sel`);
+  if (sel) {
+    const letters=['أ','ب','ج','د'];
+    const cur = questions[idx].correct || 0;
+    sel.innerHTML = [0,1,2,3].map(i=>
+      `<option value="${i}" ${cur===i?'selected':''}>${letters[i]} – ${questions[idx].options[i]||'الخيار '+(i+1)}</option>`
+    ).join('');
+  }
+}
+
+document.getElementById('add-q-btn').onclick = addQuestion;
+
+// ── Publish exam ──────────────────────────────
+document.getElementById('publish-btn').onclick = async () => {
+  const title    = document.getElementById('exam-title').value.trim();
+  const duration = +document.getElementById('exam-duration').value || 30;
+  const shuffle  = document.getElementById('exam-shuffle').value === '1';
+  const desc     = document.getElementById('exam-desc').value.trim();
+
+  if (!title) { toast('⚠️ أدخل عنوان الاختبار'); return; }
+
+  const btn = document.getElementById('publish-btn');
+  btn.disabled = true;
+  btn.innerText = '⏳ جاري المزامنة...';
+
+  // Collect data directly from DOM to be 100% sure we have the latest input
+  const qCards = document.querySelectorAll('.q-card');
+  const finalQuestions = [];
+
+  qCards.forEach((card, idx) => {
+    const text = card.querySelector('textarea').value.trim();
+    const opts = Array.from(card.querySelectorAll('.option-row input')).map(i => i.value.trim());
+    const correct = parseInt(card.querySelector('.correct-sel').value);
+    
+    // Only include if not completely empty
+    if (text || opts.some(o => o)) {
+      finalQuestions.push({ id: idx, text, options: opts, correct });
+    }
+  });
+
+  if (finalQuestions.length < 1) { 
+    toast('⚠️ أضف سؤالاً واحداً على الأقل واكتب فيه نصاً'); 
+    btn.disabled = false;
+    btn.innerText = '⚡ نشر الاختبار الآن';
+    return; 
+  }
+
+  const invalid = finalQuestions.find(q => !q.text || q.options.some(o => !o));
+  if (invalid) { 
+    toast('⚠️ تأكد من كتابة نص السؤال وجميع الخيارات الأربعة لكل سؤال'); 
+    btn.disabled = false;
+    btn.innerText = '⚡ نشر الاختبار الآن';
+    return; 
+  }
+
+  const exam = {
+    id: uid(),
+    teacher_id: teacherId,
+    title,
+    duration,
+    shuffle,
+    description: desc,
+    questions: finalQuestions
+  };
+
+  try {
+    if (common.supabase) {
+      const { error } = await common.supabase.from('exams').insert([exam]);
+      if (error) throw error;
+    } else {
+      // Local fallback
+      exams.unshift({...exam, createdAt: Date.now()});
+      localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
+    }
+
+    // Show result URL — use relative path
+    const examUrl = basePath() + `exam.html?exam=${exam.id}&teacher=${teacherId}`;
+    document.getElementById('exam-url-display').textContent = examUrl;
+    document.getElementById('preview-exam-link').href = examUrl;
+    document.getElementById('publish-result').classList.remove('hidden');
+
+    if (navigator.clipboard) navigator.clipboard.writeText(examUrl);
+    toast('✅ تم نشر الاختبار ونسخ الرابط!');
+
+    // Reset builder
+    questions = [];
+    renderQuestions();
+    document.getElementById('exam-title').value = '';
+    document.getElementById('exam-duration').value = 30;
+    document.getElementById('exam-desc').value = '';
+    
+    // Add one fresh question
+    addQuestion();
+
+    await initData();
+  } catch (err) {
+    console.error("Publish Error:", err);
+    toast('❌ فشل الحفظ في السحابة');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '⚡ نشر الاختبار الآن';
+  }
+};
+
+document.getElementById('copy-exam-url').onclick = () => {
+  const url = document.getElementById('exam-url-display').textContent;
+  navigator.clipboard.writeText(url).then(() => toast('تم النسخ!'));
+};
+
+// ── Render published exams ─────────────────────
+function renderExamsList() {
+  const el = document.getElementById('exams-list');
+  if (!exams.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>لا توجد اختبارات</p></div>`;
+    return;
+  }
+  el.innerHTML = exams.map(ex => {
+    const exResults = results.filter(r => r.exam_id === ex.id);
+    const avg = exResults.length
+      ? Math.round(exResults.reduce((s,r) => s + r.percentage, 0) / exResults.length)
+      : null;
+    return `
+      <div class="exam-item">
+        <div style="min-width:0">
+          <div class="font-bold text-sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.title}</div>
+          <div class="exam-meta">${ex.questions.length} سؤال • ${ex.duration} دقيقة • ${exResults.length} تسليم ${avg!==null?'• متوسط: '+avg+'%':''}</div>
+        </div>
+        <div class="exam-actions">
+          <button class="btn btn-sm btn-outline" onclick="copyExamLink('${ex.id}')">نسخ</button>
+          <button class="btn btn-sm btn-red" onclick="deleteExam('${ex.id}')">حذف</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function copyExamLink(examId) {
+  const url = basePath() + `exam.html?exam=${examId}&teacher=${teacherId}`;
+  navigator.clipboard.writeText(url).then(() => toast('تم نسخ رابط الاختبار!'));
+}
+
+async function deleteExam(examId) {
+  if (!confirm('حذف الاختبار نهائياً؟')) return;
+  
+  if (common.supabase) {
+    const { error } = await common.supabase.from('exams').delete().eq('id', examId);
+    if (error) { toast('❌ فشل الحذف'); return; }
+  } else {
+    exams = exams.filter(e => e.id !== examId);
+    localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
+  }
+  
+  await initData();
+  toast('🗑️ تم حذف الاختبار');
+}
+
+// ── Render results ─────────────────────────────
+function renderResults() {
+  const el = document.getElementById('results-list');
+  if (!results.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📈</div><p>لا توجد نتائج بعد</p></div>`;
+    return;
+  }
+  const sorted = [...results].sort((a,b) => b.submitted_at - a.submitted_at).slice(0,10);
+  el.innerHTML = sorted.map(r => {
+    const exam = exams.find(e => e.id === r.exam_id);
+    const color = r.percentage >= 75 ? 'var(--green)' : r.percentage >= 50 ? 'var(--amber)' : 'var(--red)';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;
+        border:1.5px solid var(--s100);border-radius:1rem;margin-bottom:.5rem">
+        <div>
+          <div class="text-sm font-bold">${r.student_name||'طالب'}</div>
+          <div class="text-xs text-s400">${exam?exam.title:'اختبار محذوف'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:1.25rem;font-weight:900;color:${color}">${r.percentage}%</div>
+          <div class="text-xs text-s400">${r.score}/${r.total}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Update stats ───────────────────────────────
+function updateStats() {
+  document.getElementById('stat-exams').textContent = exams.length;
+  document.getElementById('stat-submissions').textContent = results.length;
+  if (results.length) {
+    const avg = Math.round(results.reduce((s,r) => s + r.percentage, 0) / results.length);
+    document.getElementById('stat-avg').textContent = avg + '%';
+  }
+}
+
+// ── INIT ──────────────────────────────────────
+renderQuestions();
+initData();
+
+// Add first question by default
+addQuestion();
+
+// Listen for new results from exam page (cross-tab via storage event)
+window.addEventListener('storage', e => {
+  if (e.key === RESULTS_KEY) {
+    initData();
+  }
+});
+</script>
+</body>
+</html>

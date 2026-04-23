@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الطالب - Eljnina</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col pt-24">
+    <div id="navbar-container"></div>
+
+    <main class="flex-1 pb-12 px-8 max-w-7xl mx-auto w-full">
+        <div id="entry-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[70vh]">
+            <div class="lg:col-span-6">
+                <div class="mb-6 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                  نظام المتابعة الأكاديمية الذكي
+                </div>
+                <h1 class="text-5xl lg:text-7xl font-black text-slate-900 leading-tight mb-2 tracking-tighter">
+                  أهلاً بك مع <br/><span id="teacher-name-entry" class="text-emerald-500 italic">...</span>
+                </h1>
+                <p id="teacher-subject-entry" class="text-xl font-bold text-slate-400 mb-8 italic">جاري تحميل التخصص...</p>
+                <p class="text-lg text-slate-600 leading-relaxed mb-8 max-w-xl">
+                  منصة الجنينة تضمن لك وصولاً سريعاً للمحاضرات واختبارات قياس المستوى. سجل الآن لتدخل القاعة الأكاديمية الخاصة بـ <span class="teacher-name-placeholder font-bold text-slate-800">...</span>.
+                </p>
+            </div>
+            <div class="lg:col-span-6 flex justify-center lg:justify-end">
+                <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100 backdrop-blur-md w-full max-w-md">
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tighter">دخول الطالب</h3>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.3em]">Identity Verification</p>
+                    </div>
+                    <form id="student-form" class="space-y-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">الإسم بالكامل</label>
+                            <input required type="text" id="name" placeholder="اسمك الثلاثي يا بطل" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 focus:ring-0 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">رقم الموبايل (واتساب)</label>
+                            <input required type="tel" id="whatsapp" placeholder="رقمك للتواصل والمتابعة" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 focus:ring-0 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300">
+                        </div>
+                        <button type="submit" id="student-submit" class="flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-[2rem] transition-all shadow-lg shadow-emerald-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full py-5 text-xl">دخول المحاضرة</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="portal-view" class="hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-8 space-y-6">
+                   <div class="bg-slate-900 text-white p-8 rounded-[3.5rem] flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+                      <div class="flex items-center gap-6 z-10">
+                         <div id="teacher-initial" class="w-20 h-20 bg-emerald-500 rounded-full border-4 border-slate-800 flex items-center justify-center text-white font-black text-3xl">-</div>
+                         <div>
+                            <h3 id="teacher-name-portal" class="text-3xl font-black mb-1 tracking-tight">...</h3>
+                            <p id="teacher-subject" class="text-emerald-400 font-bold tracking-widest uppercase text-[10px]">...</p>
+                         </div>
+                      </div>
+                      <div class="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md flex items-center gap-3 border border-white/5">
+                         <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                         <span class="text-xs font-black uppercase tracking-widest">تغطية مباشرة</span>
+                      </div>
+                   </div>
+
+                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="bg-white p-8 rounded-[3rem] shadow-xl border-2 border-slate-50 transition-all hover:bg-slate-50/50 hover:scale-[1.02] cursor-default flex flex-col h-80 group">
+                         <div class="w-16 h-16 bg-blue-100 rounded-3xl flex items-center justify-center text-blue-600 mb-8 transform group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                         </div>
+                         <h4 class="text-2xl font-black mb-2 tracking-tighter">حضور المحاضرة</h4>
+                         <p class="text-xs text-slate-400 font-bold uppercase tracking-widest italic mb-8">Virtual Classroom Access</p>
+                         <button id="lesson-btn" class="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
+                            دخول القاعة
+                         </button>
+                      </div>
+                      <div class="bg-white p-8 rounded-[3rem] shadow-xl border-2 border-slate-50 transition-all hover:bg-slate-50/50 hover:scale-[1.02] cursor-default flex flex-col h-80 group border-purple-100 bg-purple-50/20">
+                         <div class="w-16 h-16 bg-purple-100 rounded-3xl flex items-center justify-center text-purple-600 mb-8 transform group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                         </div>
+                         <h4 class="text-2xl font-black mb-2 tracking-tighter text-purple-900">إختبار المتابعة</h4>
+                         <p class="text-xs text-slate-400 font-bold uppercase tracking-widest italic mb-8">Skill Assessment Engine</p>
+                         <button id="exam-btn" class="w-full py-5 bg-purple-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-purple-100 hover:bg-purple-700 transition-all flex items-center justify-center gap-3">
+                            بدء الإختبار
+                         </button>
+                      </div>
+                   </div>
+                </div>
+
+                <div class="lg:col-span-4 space-y-6">
+                   <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100 backdrop-blur-md p-8 h-full flex flex-col justify-between overflow-hidden relative border-2 border-emerald-50 shadow-emerald-100 min-h-[400px]">
+                      <div class="space-y-8 z-10">
+                         <div class="flex justify-between items-center">
+                            <h5 class="text-xl font-black tracking-tighter">مرحباً <span id="student-name-display" class="text-emerald-500">...</span></h5>
+                            <button id="logout-btn" class="text-slate-300 hover:text-red-500 transition-colors">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            </button>
+                         </div>
+                         <div class="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 shadow-inner">
+                            <p class="text-sm font-bold text-slate-600 leading-relaxed italic">"التعليم مش مجرد تلقين، التعليم زرعة بتكبر كل يوم لمستقبل أحسن."</p>
+                         </div>
+                         <button id="whatsapp-btn" class="w-full py-4 bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500/20 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
+                            تواصل مع المستشار
+                         </button>
+                      </div>
+                   </div>
+                </div>
+            </div>
+
+            <!-- ── AVAILABLE EXAMS SECTION ── -->
+            <div class="mt-12">
+               <div class="flex items-center justify-between mb-6 px-2">
+                  <div>
+                     <h4 class="text-xl font-black text-slate-800 tracking-tighter">الاختبارات المتاحة</h4>
+                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Level Assessments</p>
+                  </div>
+                  <span id="exam-count" class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black">0 اختبار</span>
+               </div>
+               
+               <div id="exams-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <!-- Exams injected by JS -->
+                  <div class="col-span-full bg-white p-12 rounded-[2.5rem] border border-dashed border-slate-200 text-center text-slate-300 font-bold italic text-sm">
+                     لا توجد اختبارات متاحة في الوقت الحالي.
+                  </div>
+               </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script type="module">
+        import common from './common.js';
+        
+        const params = new URLSearchParams(window.location.search);
+        const teacherId = params.get('teacher');
+        let teacherData = null;
+
+        if (!teacherId) {
+            document.body.innerHTML = `
+                <div class="min-h-screen bg-slate-50 flex items-center justify-center p-8 text-center" dir="rtl">
+                    <div class="max-w-md">
+                        <h1 class="text-2xl font-black text-red-500 mb-4">رابط غير صحيح</h1>
+                        <p class="text-slate-500 font-bold mb-8">عذراً، هذا الرابط ينقصه معرف المدرس. يرجى الحصول على الرابط الصحيح من المدرس الخاص بك.</p>
+                        <a href="index.html" class="text-emerald-600 font-bold">العودة للرئيسية</a>
+                    </div>
+                </div>
+            `;
+            throw new Error("Missing teacher ID");
+        }
+
+        common.injectNavigation('student');
+        common.injectFooter();
+
+        function renderTeacherUI() {
+            if (!teacherData) return;
+            document.getElementById('teacher-name-entry').innerText = teacherData.name;
+            document.getElementById('teacher-name-portal').innerText = teacherData.name;
+            
+            const subjectText = teacherData.subject || 'مدرس معتمد';
+            document.getElementById('teacher-subject-entry').innerText = subjectText;
+            document.getElementById('teacher-subject').innerText = subjectText;
+
+            // Update placeholders in text
+            document.querySelectorAll('.teacher-name-placeholder').forEach(el => el.innerText = teacherData.name);
+            
+            const parts = teacherData.name.split(" ");
+            const displayInitial = parts.length > 1 ? parts[1].charAt(0) : teacherData.name.charAt(0);
+            document.getElementById('teacher-initial').innerText = displayInitial;
+        }
+
+        async function init() {
+            await common.initSupabase();
+            if (!common.supabase) {
+                console.warn("Supabase client not initialized. Using fallbacks.");
+                teacherData = common.getTeacherData(teacherId);
+                renderTeacherUI();
+                checkLogin();
+                return;
+            }
+            const { data, error } = await common.supabase
+                .from('teachers')
+                .select('*')
+                .eq('id', teacherId)
+                .single();
+
+            if (error || !data) {
+                console.error("Error fetching teacher from Supabase:", error);
+                teacherData = common.getTeacherData(teacherId);
+                if (common.supabase) {
+                    document.getElementById('error-container').innerHTML = `
+                        <div class="bg-amber-50 p-4 rounded-2xl text-amber-700 text-[10px] font-bold border border-amber-100 mb-6 italic">
+                            ⚠️ تنبيه: بيانات المدرس غير مزامنة مع السحاب. قد يفشل تسجيل الطلاب.
+                        </div>
+                    `;
+                    document.getElementById('error-container').classList.remove('hidden');
+                }
+            } else {
+                if (data.is_active === false) {
+                    document.body.innerHTML = `
+                        <div class="min-h-screen bg-slate-50 flex items-center justify-center p-8 text-center" dir="rtl">
+                            <div class="max-w-md">
+                                <div class="w-20 h-20 bg-amber-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                </div>
+                                <h1 class="text-4xl font-black text-slate-900 mb-4 tracking-tighter">بوابة المدرس مغلقة</h1>
+                                <p class="text-slate-500 font-bold mb-10 leading-relaxed">عذراً، هذه البوابة غير مفعلة حالياً من قبل المدرس. يرجى مراجعة المدرس أو المحاضر الخاص بك.</p>
+                                <div class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Eljnina Maintenance Mode</div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                teacherData = {
+                    id: data.id,
+                    name: data.name,
+                    subject: data.subject,
+                    whatsapp: data.whatsapp,
+                    lessonLink: data.lesson_link,
+                    examLink: data.exam_link,
+                    subscription_tier: data.subscription_tier || 'basic'
+                };
+                
+                // Fetch current student count for limit enforcement
+                const { count: studentCount } = await common.supabase
+                    .from('students')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('teacher_id', teacherId);
+                
+                teacherData.student_count = studentCount || 0;
+                
+                const limits = { 'basic': 50, 'silver': 75, 'gold': 100, 'pro': 500, 'unlimited': 9999 };
+                teacherData.limit = limits[teacherData.subscription_tier] || 50;
+
+                common.injectNavigation('student', data.name);
+            }
+
+            renderTeacherUI();
+            checkLogin();
+        }
+
+        const checkLogin = () => {
+            const saved = localStorage.getItem(`edupro_user_${teacherId}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('student-name-display').innerText = data.name.split(" ")[0];
+                document.getElementById('entry-view').classList.add('hidden');
+                document.getElementById('portal-view').classList.remove('hidden');
+                
+                // Load Exams
+                renderExams();
+            } else {
+                document.getElementById('entry-view').classList.remove('hidden');
+                document.getElementById('portal-view').classList.add('hidden');
+            }
+        };
+
+        async function renderExams() {
+            const container = document.getElementById('exams-container');
+            let exams = [];
+            let latestClass = null;
+            
+            if (common.supabase) {
+                // Fetch Exams
+                const { data: exData, error: exError } = await common.supabase
+                    .from('exams')
+                    .select('*')
+                    .eq('teacher_id', teacherId)
+                    .order('created_at', { ascending: false });
+                if (!exError) exams = exData || [];
+
+                // Fetch Latest Class
+                const { data: clData } = await common.supabase
+                    .from('classes')
+                    .select('*')
+                    .eq('teacher_id', teacherId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                latestClass = clData;
+            } else {
+                const EXAMS_KEY = `edupro_exams_${teacherId}`;
+                exams = JSON.parse(localStorage.getItem(EXAMS_KEY) || '[]');
+            }
+            
+            document.getElementById('exam-count').innerText = `${exams.length} اختبار`;
+
+            // Connect Big Buttons
+            const examBtn = document.getElementById('exam-btn');
+            if (exams.length > 0) {
+                examBtn.onclick = () => window.location.href = `exam.html?exam=${exams[0].id}&teacher=${teacherId}`;
+                examBtn.classList.remove('opacity-50');
+            } else {
+                examBtn.onclick = () => alert('لا توجد اختبارات متاحة حالياً.');
+                examBtn.classList.add('opacity-50');
+            }
+
+            const lessonBtn = document.getElementById('lesson-btn');
+            if (latestClass) {
+                lessonBtn.onclick = () => window.location.href = `classroom.html?cid=${latestClass.id}&teacher=${teacherId}`;
+                lessonBtn.classList.remove('opacity-50');
+            } else {
+                lessonBtn.onclick = () => alert('لا توجد حصة جارية حالياً.');
+                lessonBtn.classList.add('opacity-50');
+            }
+
+            if (exams.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white p-12 rounded-[2.5rem] border border-dashed border-slate-200 text-center text-slate-300 font-bold italic text-sm">
+                       لا توجد اختبارات متاحة في الوقت الحالي.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = exams.map(ex => `
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:border-emerald-200 transition-all group flex flex-col justify-between h-full">
+                   <div>
+                      <div class="flex items-center gap-3 mb-4">
+                         <div class="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center font-black text-lg">📝</div>
+                         <span class="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md uppercase tracking-wider">${ex.duration} دقيقة</span>
+                      </div>
+                      <h5 class="text-lg font-black text-slate-800 mb-2 leading-tight">${ex.title}</h5>
+                      <p class="text-xs text-slate-400 font-bold line-clamp-2 mb-6">${ex.description || ex.desc || 'لا يوجد وصف متاح للاختبار.'}</p>
+                   </div>
+                   <a href="exam.html?exam=${ex.id}&teacher=${teacherId}" class="w-full py-3 bg-emerald-500 text-white rounded-xl font-black text-sm text-center shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all">
+                      ابدأ الاختبار الآن
+                   </a>
+                </div>
+            `).join('');
+        }
+
+        init();
+
+        document.getElementById('student-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('student-submit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'جاري التسجيل...';
+
+            if (teacherData && teacherData.student_count >= teacherData.limit) {
+                alert(`⚠️ عذراً، لقد وصل المدرس للحد الأقصى من الطلاب المسموح بهم في باقته الحالية (${teacherData.limit} طالب). \n\nيرجى التواصل مع المدرس ليقوم بترقية حسابه.`);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'دخول المحاضرة';
+                return;
+            }
+
+            const payload = {
+                name: document.getElementById('name').value.trim(),
+                whatsapp: document.getElementById('whatsapp').value.trim()
+            };
+
+            // Egyptian Phone Validation (11 digits starting with 01)
+            const phoneRegex = /^01[0125][0-9]{8}$/;
+            if (!phoneRegex.test(payload.whatsapp)) {
+                alert('⚠️ يرجى إدخال رقم واتساب مصري صحيح مكون من 11 رقم (يبدأ بـ 01)');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'دخول المحاضرة';
+                return;
+            }
+                // Save to Supabase (Safe Mode - won't block if limit check fails)
+                const { error } = await common.supabase
+                    .from('students')
+                    .insert([{
+                        name: payload.name,
+                        whatsapp: payload.whatsapp,
+                        teacher_id: teacherId
+                    }]);
+
+                if (error && !error.message.includes('unique')) {
+                     console.error("Supabase error:", error);
+                }
+
+                localStorage.setItem(`edupro_user_${teacherId}`, JSON.stringify(payload));
+                checkLogin();
+            } catch (err) {
+                console.error("Supabase Registration Error:", err);
+                const errorMsg = err.message || 'خطأ غير معروف';
+                alert(`عذراً، حدث خطأ أثناء التسجيل السحابي: \n(${errorMsg})\n\nتأكد من أن المدرس مسجل بشكل صحيح ومن وجود اتصال بالإنترنت.`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'دخول المحاضرة';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem(`edupro_user_${teacherId}`);
+            checkLogin();
+        });
+
+        // Redundant listeners removed - now handled dynamically in renderExams()
+        document.getElementById('whatsapp-btn').addEventListener('click', () => {
+            const saved = JSON.parse(localStorage.getItem(`edupro_user_${teacherId}`));
+            const teacherNum = teacherData.whatsapp || "201109163370";
+            const msg = encodeURIComponent(`مرحباً أستاذ ${teacherData.name}، أنا الطالب ${saved ? saved.name : ''}، لدي استفسار من منصة الجنينة.`);
+            window.open(`https://wa.me/${teacherNum}?text=${msg}`, "_blank");
+        });
+    </script>
+</body>
+</html>

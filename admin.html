@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="main-html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم العليا - الجنينة</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm" type="module"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Outfit:wght@400;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root { --bg:#0f172a; --fg:#f1f5f9; --glass:rgba(15,23,42,0.7); --glass-border:rgba(255,255,255,0.08); }
+    body { background-color:var(--bg); color:var(--fg); font-family:'Cairo',sans-serif; min-height:100vh; overflow-x:hidden; }
+    .glass-card { background:var(--glass); backdrop-filter:blur(24px); border:1px solid var(--glass-border); border-radius:1.25rem; box-shadow:0 8px 40px rgba(0,0,0,0.3); }
+    .stat-card { background:var(--glass); backdrop-filter:blur(24px); border:1px solid var(--glass-border); border-radius:1.5rem; padding:1.5rem; transition: transform 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .btn-primary { background:linear-gradient(135deg,#3b82f6 0%,#10b981 100%); color:white; padding:0.7rem 1.4rem; border-radius:0.75rem; font-weight:600; border:none; cursor:pointer; transition:all 0.3s; }
+    .btn-primary:hover { transform:translateY(-2px); shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+    .input-field { width:100%; padding:0.7rem 1rem; border-radius:0.75rem; border:2px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--fg); font-family:'Cairo',sans-serif; font-size:0.95rem; outline:none; transition:all 0.3s; box-sizing:border-box; text-align: center; }
+    .input-field:focus { border-color:#3b82f6; background: rgba(255,255,255,0.1); }
+    .progress-bar { height:8px; border-radius:99px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .progress-fill { height:100%; border-radius:99px; transition:width 1s ease; }
+    .animate-float { animation:float 6s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+    #login-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:999; }
+    .hero-pattern { background-image: radial-gradient(#3b82f6 0.5px, transparent 0.5px); background-size: 24px 24px; opacity: 0.1; position: fixed; inset: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="hero-pattern"></div>
+
+  <!-- Background blobs -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-float" style="animation-delay:2s"></div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="glass-card p-12 w-full max-w-sm mx-4 text-center">
+      <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+        <i class="fas fa-shield-halved text-3xl"></i>
+      </div>
+      <h2 class="text-2xl font-black text-white mb-2 tracking-tighter">نظام الإدارة العليا</h2>
+      <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8">Master Access Only</p>
+      
+      <div class="space-y-4">
+        <div class="relative">
+            <input type="password" id="admin-pass" class="input-field pr-12" placeholder="أدخل رمز الدخول الرئيسي">
+            <button onclick="togglePass()" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                <i id="pass-icon" class="fas fa-eye"></i>
+            </button>
+        </div>
+        <div id="login-error" class="text-red-400 text-[10px] font-black uppercase tracking-widest hidden animate-pulse">الرمز غير صحيح، حاول مرة أخرى.</div>
+        <button onclick="handleLogin()" id="login-btn" class="btn-primary w-full py-5 text-xl">دخول لوحة التحكم</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="admin-dashboard" class="hidden opacity-0 transition-opacity duration-500">
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 px-8 py-4 flex items-center justify-between border-b border-white/5 backdrop-blur-xl bg-slate-900/50">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white text-sm shadow-lg">
+          <i class="fas fa-leaf"></i>
+        </div>
+        <span class="text-xl font-black italic">الجنينة / <span class="text-blue-400">Admin</span></span>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <span id="conn-status" class="w-2 h-2 rounded-full bg-slate-500"></span>
+          Supabase Connectivity: <span id="conn-text">Checking...</span>
+        </div>
+        <button onclick="logout()" class="text-xs font-black text-red-400 hover:text-red-300 transition-colors uppercase tracking-widest flex items-center gap-2">
+          تسجيل الخروج <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 py-12">
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="stat-card">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Teachers</p>
+          <div class="flex items-end gap-3">
+             <h3 class="text-4xl font-black font-outfit" id="stat-teachers">0</h3>
+             <span class="text-xs text-blue-400 font-bold mb-1">+12%</span>
+          </div>
+          <div class="mt-4 progress-bar"><div id="bar-teachers" class="progress-fill bg-blue-500" style="width: 0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Students</p>
+          <div class="flex items-end gap-3">
+             <h3 class="text-4xl font-black font-outfit" id="stat-students">0</h3>
+             <span class="text-xs text-emerald-400 font-bold mb-1">+5%</span>
+          </div>
+          <div class="mt-4 progress-bar"><div id="bar-students" class="progress-fill bg-emerald-500" style="width: 0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monthly Revenue</p>
+          <div class="flex items-end gap-3">
+             <h3 class="text-4xl font-black font-outfit text-gradient" id="stat-revenue">0</h3>
+             <span class="text-xs text-slate-500 font-bold mb-1">EGP</span>
+          </div>
+          <p class="text-[9px] font-bold text-slate-500 mt-2 italic">Based on 199 EGP / Teacher</p>
+        </div>
+        <div class="stat-card">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">System Capacity</p>
+          <div class="flex items-end gap-3">
+             <h3 class="text-4xl font-black font-outfit" id="stat-capacity">0.1%</h3>
+          </div>
+          <div class="mt-4 progress-bar"><div class="progress-fill bg-purple-500" style="width: 1%"></div></div>
+        </div>
+      </div>
+
+      <!-- Teachers Table -->
+      <div class="glass-card overflow-hidden">
+        <div class="p-8 border-b border-white/5 flex justify-between items-center">
+          <h4 class="text-xl font-black italic tracking-tighter">قائمة المدرسين المشتركين</h4>
+          <div class="flex items-center gap-4">
+            <button onclick="createDemo()" class="text-[10px] font-black bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-all">
+               <i class="fas fa-magic ml-1"></i> إنشاء نسخة ديمو (Demo)
+            </button>
+            <button onclick="fetchData()" class="p-2 text-slate-400 hover:text-white transition-colors">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-right">
+            <thead>
+              <tr class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] text-right">
+              <th class="p-6">المدرس</th>
+              <th class="p-6">المادة</th>
+              <th class="p-6">الباقة</th>
+              <th class="p-6">كلمة المرور</th>
+              <th class="p-6 text-center">الطلاب</th>
+              <th class="p-6 text-center">الحالة</th>
+              <th class="p-6 text-center">تعديل الباقة</th>
+            </tr>
+            </thead>
+            <tbody id="teachers-list" class="divide-y divide-white/5">
+              <!-- Content loaded via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // MASTER PASSWORD (MVP Only - change this!)
+    const MASTER_PASS = "admin123";
+
+    window.handleLogin = () => {
+      const input = document.getElementById('admin-pass');
+      const pass = input.value;
+      const errorEl = document.getElementById('login-error');
+      
+      console.log("Admin Login Attempt...");
+      
+      if (pass === MASTER_PASS) {
+        console.log("Success! Accessing Dashboard...");
+        localStorage.setItem('edupro_super_admin', 'true');
+        showDashboard();
+      } else {
+        console.error("Incorrect password entered.");
+        errorEl.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        setTimeout(() => input.classList.remove('border-red-500'), 1000);
+      }
+    };
+
+    window.togglePass = () => {
+      const input = document.getElementById('admin-pass');
+      const icon = document.getElementById('pass-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    };
+
+    window.logout = () => {
+      localStorage.removeItem('edupro_super_admin');
+      window.location.reload();
+    };
+
+    function showDashboard() {
+      console.log("Showing Dashboard...");
+      const loginScreen = document.getElementById('login-screen');
+      const dash = document.getElementById('admin-dashboard');
+      
+      if (loginScreen) loginScreen.style.display = 'none';
+      if (dash) {
+        dash.classList.remove('hidden');
+        dash.style.opacity = '1';
+        dash.classList.add('opacity-100');
+      }
+      // Global flag to tell the module to fetch data
+      window.isDashboardVisible = true;
+      window.dispatchEvent(new CustomEvent('admin-ready'));
+    }
+
+    // Auto-login if session exists
+    if (localStorage.getItem('edupro_super_admin') === 'true') {
+      window.addEventListener('DOMContentLoaded', showDashboard);
+    }
+
+    // Enter key support
+    window.addEventListener('load', () => {
+        document.getElementById('admin-pass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+    });
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import SAAS_CONFIG from './config.js';
+    const sb = createClient(SAAS_CONFIG.SUPABASE_URL, SAAS_CONFIG.SUPABASE_ANON_KEY);
+
+    window.addEventListener('admin-ready', () => {
+        checkConnection();
+        fetchData();
+    });
+
+    // Fallback in case the event fired before module loaded
+    if (window.isDashboardVisible) {
+        checkConnection();
+        fetchData();
+    }
+
+    async function checkConnection() {
+      try {
+        const { data, error } = await sb.from('teachers').select('id').limit(1);
+        if (error) throw error;
+        document.getElementById('conn-status').classList.replace('bg-slate-500', 'bg-emerald-500');
+        document.getElementById('conn-text').innerText = "Connected (Live)";
+      } catch (e) {
+        document.getElementById('conn-status').classList.replace('bg-slate-500', 'bg-red-500');
+        document.getElementById('conn-text').innerText = "Disconnected";
+      }
+    }
+
+    async function fetchData() {
+      try {
+        console.log("Fetching Admin Data...");
+        const { data: teachers, error: tErr } = await sb.from('teachers').select('*').order('created_at', { ascending: false });
+        if (tErr) throw tErr;
+
+        const { data: students, error: sErr } = await sb.from('students').select('*');
+        if (sErr) throw sErr;
+
+        renderStats(teachers, students);
+        renderTeachers(teachers, students);
+      } catch (err) {
+        console.error("Fetch Error:", err);
+        alert("⚠️ خطأ في جلب البيانات: " + err.message + "\n\nتأكد من تحديث الجداول عبر ملف setup.sql");
+      }
+    }
+
+    function renderStats(teachers, students) {
+      const totalTeachers = teachers.length;
+      const totalStudents = students ? students.length : 0;
+      const revenue = totalTeachers * 199;
+
+      document.getElementById('stat-teachers').innerText = totalTeachers;
+      document.getElementById('stat-students').innerText = totalStudents;
+      document.getElementById('stat-revenue').innerText = revenue.toLocaleString();
+      
+      document.getElementById('bar-teachers').style.width = Math.min(100, (totalTeachers/500)*100) + "%";
+      document.getElementById('bar-students').style.width = Math.min(100, (totalStudents/50000)*100) + "%";
+
+      const list = document.getElementById('teachers-list');
+      list.innerHTML = teachers.map(t => {
+        const tStudents = students ? students.filter(s => s.teacher_id === t.id).length : 0;
+        return `
+            <tr class="hover:bg-white/2 transition-colors border-b border-white/5">
+              <td class="px-8 py-6">
+                 <p class="font-bold text-blue-100">${t.name}</p>
+                 <p class="text-[10px] text-slate-500 font-mono uppercase">${t.id}</p>
+              </td>
+              <td class="px-8 py-6 text-slate-400 font-bold">${t.subject}</td>
+              <td class="px-8 py-6">
+                 <span class="px-3 py-1 bg-violet-500/10 text-violet-400 rounded-lg text-[10px] font-black uppercase">${t.subscription_tier || 'basic'}</span>
+              </td>
+              <td class="px-8 py-6">
+                 <div class="flex items-center gap-2">
+                    <span class="font-mono text-emerald-500 text-xs">${t.password || '---'}</span>
+                    <i class="fas fa-key text-[9px] text-slate-600"></i>
+                 </div>
+                 <p class="text-[9px] text-slate-500 mt-1">${t.whatsapp}</p>
+              </td>
+              <td class="px-8 py-6 text-center">
+                 <span class="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-black">${tStudents}</span>
+              </td>
+              <td class="px-8 py-6">
+                 <div class="flex flex-col gap-1 items-center">
+                    <span class="px-3 py-1 ${t.is_active !== false ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'} rounded-lg text-[9px] font-black uppercase tracking-widest text-center">
+                        ${t.is_active !== false ? 'نشط' : 'متوقف'}
+                    </span>
+                 </div>
+              </td>
+              <td class="px-8 py-6">
+                 <div class="flex gap-2 justify-center">
+                    <button onclick="toggleTeacher('${t.id}', ${t.is_active !== false})" class="text-[9px] font-black px-3 py-1.5 border border-white/10 rounded-lg hover:bg-white/5 transition-all">
+                        ${t.is_active !== false ? 'إيقاف' : 'تفعيل'}
+                    </button>
+                    <select onchange="updateTier('${t.id}', this.value)" class="bg-slate-800 border border-white/10 rounded-lg text-[9px] p-1.5 outline-none">
+                        <option value="basic" ${t.subscription_tier === 'basic' ? 'selected' : ''}>Basic</option>
+                        <option value="silver" ${t.subscription_tier === 'silver' ? 'selected' : ''}>Silver</option>
+                        <option value="gold" ${t.subscription_tier === 'gold' ? 'selected' : ''}>Gold</option>
+                        <option value="unlimited" ${t.subscription_tier === 'unlimited' ? 'selected' : ''}>Pro (∞)</option>
+                    </select>
+                 </div>
+              </td>
+            </tr>
+        `;
+      }).join('');
+    }
+
+    window.createDemo = async () => {
+      const demoId = 'demo_' + Math.random().toString(36).substr(2, 5);
+      const { error: tErr } = await sb.from('teachers').upsert([{
+        id: demoId,
+        name: 'أ / محمد علي (ديمو)',
+        subject: 'الفيزياء للثانوية العامة',
+        whatsapp: '201109163370',
+        lesson_link: 'https://zoom.us/demo',
+        exam_link: 'https://forms.gle/demo',
+        subscription_tier: 'gold',
+        is_active: true
+      }]);
+
+      if (tErr) { alert('Error creating demo teacher: ' + tErr.message); return; }
+
+      const names = ["أحمد", "سارة", "محمود", "ليلى", "ياسين", "نور", "عمر", "مريم", "زياد", "هنا"];
+      const demoStudents = Array.from({length: 52}, (_, i) => ({
+        name: names[i % names.length] + " " + (i + 1),
+        whatsapp: `011${Math.floor(10000000 + Math.random() * 90000000)}`,
+        teacher_id: demoId
+      }));
+
+      const { error: sErr } = await sb.from('students').insert(demoStudents);
+      if (sErr) alert('Error creating demo students: ' + sErr.message);
+      else {
+        alert(`🎉 تم إنشاء نسخة الديمو بنجاح!\n\nمعرف المدرس: ${demoId}\nعدد الطلاب: 52 طالب\nالباقة: الذهبية (Gold)`);
+        fetchData();
+      }
+    };
+
+    window.updateTier = async (id, newTier) => {
+      const { error } = await sb.from('teachers').update({ subscription_tier: newTier }).eq('id', id);
+      if (error) alert('Error: ' + error.message);
+      else fetchData();
+    };
+
+    window.toggleTeacher = async (id, currentStatus) => {
+      if (!confirm('هل أنت متأكد من تغيير حالة هذا المدرس؟')) return;
+      const { error } = await sb.from('teachers').update({ is_active: !currentStatus }).eq('id', id);
+      if (error) alert('Error: ' + error.message);
+      else fetchData();
+    };
+
+    window.changePassword = async (id) => {
+      const newPass = prompt('ادخل كلمة المرور الجديدة:');
+      if (!newPass) return;
+      const { error } = await sb.from('teachers').update({ password: newPass }).eq('id', id);
+      if (error) alert('Error: ' + error.message);
+      else fetchData();
+    };
+
+    // Auto-login if session exists
+    if (localStorage.getItem('edupro_super_admin') === 'true') {
+      showDashboard();
+    }
+  </script>
+</body>
+</html>

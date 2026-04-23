@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الروابط - Eljnina</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col pt-8 lg:pt-12">
+
+    <main class="flex-1 pb-12 px-8 max-w-7xl mx-auto w-full pt-8 lg:pt-12">
+        <div class="max-w-5xl mx-auto py-4">
+            <div class="mb-10 text-center">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+                    نظام الجنينة الذكي
+                </div>
+                <h2 class="text-5xl font-black text-slate-900 tracking-tighter italic">لوحة <span class="text-emerald-500">التحكم</span></h2>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mt-4">Command & Control Center</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7">
+                    <div class="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 relative overflow-hidden">
+                        <form id="update-form" class="space-y-8 relative z-10">
+                            <!-- ══ AUTO SESSION SWITCHER CONFIG ══ -->
+                            <div class="space-y-6">
+                              <div class="flex items-center gap-2 mb-4 bg-violet-50 p-6 rounded-[2.5rem] border-2 border-violet-100">
+                                <div class="w-8 h-8 bg-violet-100 rounded-xl flex items-center justify-center text-violet-600 text-sm">🔄</div>
+                                <div>
+                                  <h4 class="font-black text-slate-800 text-sm">نظام التبديل التلقائي للجلسات</h4>
+                                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Auto Session Switcher</p>
+                                </div>
+                              </div>
+                              <p class="text-xs text-slate-500 font-bold mb-6 leading-relaxed">أضف روابط Zoom الخاصة بكل جلسة (40 دقيقة) وسيقوم النظام بنقل الطلاب تلقائياً بدون أي تدخل.</p>
+
+                              <div id="session-slots" class="space-y-3 mb-4">
+                                <!-- slots injected by JS -->
+                              </div>
+
+                              <button type="button" id="add-session-btn" class="flex items-center gap-2 text-xs font-black text-violet-600 hover:text-violet-800 transition-colors mb-6 px-4 py-2 bg-violet-50 rounded-xl hover:bg-violet-100">
+                                + إضافة جلسة جديدة
+                              </button>
+
+                              <button type="button" id="generate-classroom-btn" class="flex items-center justify-center gap-3 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-[2rem] transition-all w-full py-5 text-base shadow-lg shadow-violet-100 active:scale-95">
+                                ⚡ توليد رابط القاعة التلقائي
+                              </button>
+
+                              <div id="classroom-url-box" class="hidden mt-4 bg-violet-50 border-2 border-violet-200 rounded-2xl p-4">
+                                <p class="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2">رابط القاعة (أعطه للطلاب)</p>
+                                <div class="flex items-center gap-3">
+                                  <a id="classroom-url-link" href="#" target="_blank" class="text-xs font-mono text-violet-700 truncate flex-1 hover:underline">...</a>
+                                  <button id="copy-classroom-btn" class="shrink-0 px-3 py-2 bg-violet-600 text-white rounded-xl text-xs font-black hover:bg-violet-700 transition-colors">نسخ</button>
+                                </div>
+                              </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100 backdrop-blur-md p-8 border-2 border-emerald-400 shadow-xl bg-emerald-50/30 min-h-[300px]">
+                        <h4 class="text-xl font-black mb-6 flex items-center gap-2" id="sub-title">حالة الاشتراك</h4>
+                        <div id="subscription-status" class="space-y-4 mb-8">
+                            <div class="flex justify-between items-center text-xs font-bold">
+                                <span class="text-slate-500 uppercase tracking-widest">الباقة الحالية:</span>
+                                <span id="tier-display" class="bg-emerald-500 text-white px-3 py-1 rounded-full uppercase">Basic</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-bold">
+                                <span class="text-slate-500 uppercase tracking-widest">الفترة التجريبية:</span>
+                                <span id="trial-display" class="text-emerald-600">...</span>
+                            </div>
+                            <div class="pt-2">
+                                <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
+                                    <span>الطلاب المسجلون</span>
+                                    <span id="student-limit-text">0 / 50</span>
+                                </div>
+                                <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+                                    <div id="student-bar" class="h-full bg-emerald-500 transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="upgrade-section" class="hidden mt-6 pt-6 border-t border-emerald-100">
+                           <div class="flex items-center gap-2 mb-4 bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                             <div class="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs">💸</div>
+                             <div>
+                               <p class="text-[10px] font-black text-emerald-700 uppercase tracking-tight">الدفع عبر فودافون كاش</p>
+                               <p class="text-[9px] text-emerald-600 font-bold italic">Vodafone Cash Payment</p>
+                             </div>
+                           </div>
+                           <a href="https://wa.me/201109163370?text=أريد_ترقية_حسابي_إلى_الباقة_الاحترافية_عبر_فودافون_كاش" target="_blank" class="block text-center py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                             🚀 ترقية للحساب الاحترافي (Pro)
+                           </a>
+                           <p class="text-[9px] text-center text-slate-400 mt-2 font-bold italic">تواصل معنا لتفعيل حسابك فور التحويل</p>
+                        </div>
+                        <div class="p-6 bg-white/50 rounded-3xl border border-slate-200">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">رابط الدخول للطلاب:</p>
+                            <div class="flex items-center gap-3">
+                                <div id="student-url" class="text-xs font-mono text-emerald-600 truncate flex-1 font-bold">...</div>
+                                <button id="copy-btn" class="shrink-0 text-emerald-500 hover:text-emerald-700 font-bold text-xs">نسخ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 p-10 rounded-[3.5rem] shadow-2xl text-white">
+                        <h4 class="text-xl font-black mb-4 tracking-tighter">نصيحة المنصة 💡</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed font-bold">
+                            "تأكد دائماً من تحديث رابط المحاضرة قبل الموعد بـ 10 دقائق لتجنب أي تأخير للطلاب. نظام التبديل التلقائي سيتكفل بالباقي!"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script type="module">
+        import common from './common.js';
+        
+        const params = new URLSearchParams(window.location.search);
+        const teacherId = params.get('teacher') || 'ahmed_math';
+        let teacherData = null;
+
+        common.injectSidebar('manage');
+        common.injectFooter();
+
+        // Admin Security Check
+        const authorizedId = localStorage.getItem('eljnina_admin_id');
+        if (authorizedId !== teacherId) {
+            window.location.href = 'start.html';
+        }
+
+        async function fetchTeacherData() {
+            await common.initSupabase();
+            if (!common.supabase) return;
+            const { data } = await common.supabase.from('teachers').select('*').eq('id', teacherId).single();
+            if (data) {
+                teacherData = data;
+                if (data.name) {
+                    common.injectSidebar('manage', data.name);
+                }
+                document.getElementById('tier-display').innerText = data.subscription_tier || 'Basic';
+
+                if (data.subscription_tier === 'Pro') {
+                    document.getElementById('sub-title').innerText = 'الاشتراك النشط';
+                    document.getElementById('upgrade-section').classList.add('hidden');
+                } else {
+                    document.getElementById('sub-title').innerText = 'ترقية الحساب';
+                    document.getElementById('upgrade-section').classList.remove('hidden');
+                }
+                
+                // Fetch student count
+                const { count } = await common.supabase.from('students').select('*', { count: 'exact', head: true }).eq('teacher_id', teacherId);
+                const limits = { 'basic': 50, 'silver': 75, 'gold': 100, 'pro': 500, 'unlimited': 9999 };
+                const tier = (data.subscription_tier || 'basic').toLowerCase();
+                const limit = limits[tier] || 50;
+                document.getElementById('student-limit-text').innerText = `${count || 0} / ${limit}`;
+                document.getElementById('student-bar').style.width = `${Math.min(100, ((count || 0) / limit) * 100)}%`;
+                
+                // Robust Student URL generation (handles cleanUrls and various paths)
+                const baseUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
+                const studentUrl = `${baseUrl}/student.html?teacher=${teacherId}`;
+                document.getElementById('student-url').innerText = studentUrl;
+                
+                // Trial countdown
+                const start = localStorage.getItem(`eljnina_trial_start_${teacherId}`);
+                if (start) {
+                    const diff = (parseInt(start) + (4 * 24 * 60 * 60 * 1000)) - Date.now();
+                    const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+                    document.getElementById('trial-display').innerText = `باقي ${days} أيام`;
+                }
+            }
+        }
+        fetchTeacherData();
+
+        // Removed manual update form listener as the section is deleted
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const url = document.getElementById('student-url').innerText;
+            navigator.clipboard.writeText(url).then(() => alert('تم نسخ الرابط!'));
+        });
+
+        // ══════════════════════════════════════════════════
+        //  AUTO SESSION SWITCHER — TEACHER CONFIG LOGIC
+        // ══════════════════════════════════════════════════
+        
+        const SS_KEY = `eljnina_sessions_${teacherId}`;
+        let sessionSlots = JSON.parse(localStorage.getItem(SS_KEY) || 'null') || [
+          { label: 'الجلسة الأولى', link: '', duration: 40 },
+          { label: 'الجلسة الثانية', link: '', duration: 40 }
+        ];
+
+        const slotsContainer = document.getElementById('session-slots');
+
+        function renderSlots() {
+          slotsContainer.innerHTML = '';
+          sessionSlots.forEach((sess, i) => {
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center';
+            row.innerHTML = `
+              <div class="flex-1 flex flex-col md:flex-row gap-2">
+                <input type="text" placeholder="اسم الجلسة (مثلاً: شرح الجزء الأول)"
+                  value="${sess.label || ''}"
+                  data-idx="${i}" data-field="label"
+                  class="w-full md:w-1/3 px-4 py-3 bg-white border-2 border-slate-100 rounded-xl focus:border-violet-400 outline-none text-[10px] font-black text-slate-700 placeholder:text-slate-300 transition-all"
+                />
+                <input type="url" placeholder="رابط Zoom للجلسة ${i + 1}"
+                  value="${sess.link}"
+                  data-idx="${i}" data-field="link"
+                  class="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-violet-400 outline-none text-xs font-bold text-slate-700 placeholder:text-slate-300 transition-all"
+                />
+                <input type="number" placeholder="دقائق" min="1" max="240"
+                  value="${sess.duration}"
+                  data-idx="${i}" data-field="duration"
+                  class="w-20 px-3 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-violet-400 outline-none text-xs font-bold text-slate-700 text-center transition-all"
+                />
+              </div>
+              ${sessionSlots.length > 1
+                ? `<button type="button" data-remove="${i}" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">✕</button>`
+                : `<div class="w-8"></div>`
+              }
+            `;
+            slotsContainer.appendChild(row);
+          });
+
+          slotsContainer.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('input', (e) => {
+              const idx = +e.target.dataset.idx;
+              const field = e.target.dataset.field;
+              sessionSlots[idx][field] = field === 'duration' ? (parseInt(e.target.value, 10) || 40) : e.target.value;
+              localStorage.setItem(SS_KEY, JSON.stringify(sessionSlots));
+              const genBtn = document.getElementById('generate-classroom-btn');
+              genBtn.classList.add('animate-pulse');
+              genBtn.textContent = '⚠️ قم بتوليد الرابط الجديد للحفظ';
+            });
+          });
+
+          slotsContainer.querySelectorAll('[data-remove]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const idx = +e.currentTarget.dataset.remove;
+              sessionSlots.splice(idx, 1);
+              localStorage.setItem(SS_KEY, JSON.stringify(sessionSlots));
+              renderSlots();
+            });
+          });
+        }
+        renderSlots();
+
+        document.getElementById('add-session-btn').addEventListener('click', () => {
+          sessionSlots.push({ label: `جلسة ${sessionSlots.length + 1}`, link: '', duration: 40 });
+          localStorage.setItem(SS_KEY, JSON.stringify(sessionSlots));
+          renderSlots();
+          const genBtn = document.getElementById('generate-classroom-btn');
+          genBtn.classList.add('animate-pulse');
+          genBtn.textContent = '⚠️ قم بتوليد الرابط الجديد للحفظ';
+        });
+
+        document.getElementById('generate-classroom-btn').addEventListener('click', async () => {
+          const genBtn = document.getElementById('generate-classroom-btn');
+          genBtn.disabled = true;
+          genBtn.innerHTML = '<span class="animate-spin inline-block">⏳</span> جاري المزامنة...';
+
+          try {
+            if (!common.supabase) throw new Error("لم يتم تهيئة Supabase. تأكد من إعدادات المفاتيح.");
+
+            // 1. Ensure Teacher Exists (to avoid foreign key constraint error)
+            const { data: tExists } = await common.supabase.from('teachers').select('id').eq('id', teacherId).single();
+            if (!tExists) {
+              console.log("Teacher not found, creating placeholder...");
+              await common.supabase.from('teachers').insert([{ id: teacherId, name: teacherId, subscription_tier: 'basic' }]);
+            }
+
+            const cid = `${teacherId}_${Date.now()}`;
+            const { error } = await common.supabase.from('classes').insert([{
+              id: cid,
+              teacher_id: teacherId,
+              title: `حصة ${new Date().toLocaleDateString('ar-EG')}`,
+              sessions: sessionSlots
+            }]);
+            
+            if (error) throw error;
+
+            const baseUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
+            const url = `${baseUrl}/classroom.html?cid=${cid}&teacher=${teacherId}`;
+            
+            document.getElementById('classroom-url-link').textContent = url;
+            document.getElementById('classroom-url-link').href = url;
+            document.getElementById('classroom-url-box').classList.remove('hidden');
+            
+            genBtn.innerHTML = '✅ تم الحفظ وتوليد الرابط';
+            genBtn.classList.replace('bg-violet-600', 'bg-emerald-500');
+            
+            navigator.clipboard.writeText(url);
+
+            setTimeout(() => {
+                genBtn.disabled = false;
+                genBtn.innerHTML = '⚡ توليد رابط القاعة التلقائي';
+                genBtn.classList.replace('bg-emerald-500', 'bg-violet-600');
+            }, 4000);
+
+          } catch (err) {
+            console.error("Save Error:", err);
+            alert("⚠️ فشل الحفظ: " + (err.message || "خطأ غير معروف"));
+            genBtn.disabled = false;
+            genBtn.innerHTML = '❌ فشل الحفظ - حاول مرة أخرى';
+            genBtn.classList.replace('bg-violet-600', 'bg-red-500');
+          }
+        });
+
+        document.getElementById('copy-classroom-btn').addEventListener('click', () => {
+          const url = document.getElementById('classroom-url-input').value;
+          navigator.clipboard.writeText(url).then(() => alert('✅ تم نسخ رابط القاعة!'));
+        });
+    </script>
+</body>
+</html>

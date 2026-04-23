@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>القاعة الافتراضية – Eljnina</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #10b981;
+      --green-dark: #059669;
+      --green-light: #d1fae5;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --white: #ffffff;
+      --radius: 1.5rem;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--slate-900);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      height: 64px;
+      background: rgba(15,23,42,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand { display: flex; align-items: center; gap: .75rem; }
+    .nav-logo {
+      width: 40px; height: 40px;
+      background: var(--green);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(16,185,129,.35);
+    }
+    .nav-title { font-size: 1.1rem; font-weight: 900; color: var(--white); }
+    .nav-title span { color: var(--green); }
+    .live-badge {
+      display: flex; align-items: center; gap: .5rem;
+      background: rgba(16,185,129,.12);
+      border: 1px solid rgba(16,185,129,.25);
+      border-radius: 999px;
+      padding: .35rem .9rem;
+      font-size: .65rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      color: var(--green);
+    }
+    .live-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+    /* ── MAIN LAYOUT ── */
+    main { flex: 1; display: flex; flex-direction: column; padding: 2rem; gap: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* ── WARNING BANNER ── */
+    #warning-banner {
+      display: none;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.75rem;
+      font-weight: 700;
+      font-size: 1rem;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(124,58,237,.4);
+      animation: warningPulse 1s infinite alternate;
+    }
+    @keyframes warningPulse { from{box-shadow:0 0 20px rgba(124,58,237,.3)} to{box-shadow:0 0 50px rgba(124,58,237,.7)} }
+
+    /* ── TIMER CARD ── */
+    .timer-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .timer-label {
+      font-size: .7rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .2em;
+      color: var(--slate-400);
+    }
+    .timer-display {
+      font-size: 4.5rem;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--green), #06d6a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-variant-numeric: tabular-nums;
+      transition: color .3s;
+    }
+    .timer-display.warning { background: linear-gradient(135deg,var(--amber),#f97316); -webkit-background-clip:text; background-clip:text; }
+    .timer-display.critical { background: linear-gradient(135deg,var(--red),#f97316); -webkit-background-clip:text; background-clip:text; }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #06d6a0);
+      border-radius: 999px;
+      transition: width 1s linear, background .5s;
+    }
+    .progress-fill.warning { background: linear-gradient(90deg,var(--amber),#f97316); }
+    .progress-fill.critical { background: linear-gradient(90deg,var(--red),#f97316); }
+
+    /* ── SESSION STEPS ── */
+    .sessions-row {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: .5rem;
+    }
+    .session-pill {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .65rem 1.2rem;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--slate-400);
+      transition: all .3s;
+      cursor: default;
+    }
+    .session-pill.done { border-color: rgba(16,185,129,.3); color: var(--green); background: rgba(16,185,129,.08); }
+    .session-pill.active { border-color: var(--green); color: var(--white); background: rgba(16,185,129,.15); box-shadow: 0 0 20px rgba(16,185,129,.2); }
+    .session-pill.upcoming { opacity: .4; }
+    .pill-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 900;
+      background: rgba(255,255,255,.08);
+    }
+    .session-pill.active .pill-num { background: var(--green); color: var(--white); }
+    .session-pill.done .pill-num { background: var(--green); color: var(--white); }
+
+    /* ── ACTION CARD ── */
+    .action-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      text-align: center;
+    }
+    .action-card h2 { font-size: 1.5rem; font-weight: 900; }
+    .action-card p { color: var(--slate-400); font-size: .9rem; font-weight: 600; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      padding: 1rem 2rem;
+      border-radius: 999px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--green); color: var(--white); box-shadow: 0 8px 24px rgba(16,185,129,.3); }
+    .btn-primary:hover { background: var(--green-dark); box-shadow: 0 12px 32px rgba(16,185,129,.4); }
+    .btn-outline {
+      background: transparent;
+      color: var(--slate-400);
+      border: 1.5px solid rgba(255,255,255,.12);
+    }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn-amber { background: var(--amber); color: var(--slate-900); box-shadow: 0 8px 24px rgba(245,158,11,.3); }
+    .btn-amber:hover { background: #d97706; }
+
+    /* ── ENDED STATE ── */
+    #ended-view {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      min-height: 60vh;
+      text-align: center;
+    }
+    .ended-icon {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,var(--green),#06d6a0);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 50px rgba(16,185,129,.4);
+      font-size: 2.5rem;
+    }
+    #ended-view h1 { font-size: 2.5rem; font-weight: 900; }
+    #ended-view p { color: var(--slate-400); max-width: 400px; font-weight: 600; line-height: 1.7; }
+
+    /* ── SWITCHING OVERLAY ── */
+    #switch-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.92);
+      backdrop-filter: blur(16px);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      text-align: center;
+      padding: 2rem;
+    }
+    .switch-spinner {
+      width: 80px; height: 80px;
+      border: 4px solid rgba(16,185,129,.2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    #switch-overlay h2 { font-size: 2rem; font-weight: 900; }
+    #switch-overlay p { color: var(--slate-400); font-size: 1rem; font-weight: 600; max-width: 380px; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:600px) {
+      .timer-display { font-size: 3rem; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+    </div>
+    <span class="nav-title">Eljnina / <span id="nav-teacher-name">القاعة الافتراضية</span></span>
+  </div>
+  <div class="live-badge"><div class="dot"></div> LIVE SESSION</div>
+</nav>
+
+<!-- SWITCHING OVERLAY -->
+<div id="switch-overlay" style="display:none;position:fixed;inset:0;
+  background:rgba(15,23,42,.93);backdrop-filter:blur(18px);
+  z-index:200;flex-direction:column;align-items:center;justify-content:center;
+  gap:1.5rem;text-align:center;padding:2rem">
+
+  <div style="width:80px;height:80px;border:4px solid rgba(16,185,129,.2);
+    border-top-color:#10b981;border-radius:50%;animation:spin 1s linear infinite"></div>
+
+  <div style="background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.25);
+    border-radius:1.5rem;padding:1.5rem 2rem;max-width:420px">
+    <div style="font-size:2rem;margin-bottom:.5rem">✅</div>
+    <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:.5rem">هذا طبيعي تماماً!</h2>
+    <p style="color:#94a3b8;font-size:.9rem;font-weight:600;line-height:1.7" id="overlay-msg">
+      انتهت الجلسة الأولى وهذا متوقع.
+      الجلسة الجديدة تفتح الآن تلقائياً — لا يوجد أي خطأ.
+    </p>
+  </div>
+
+  <a id="overlay-manual-btn" href="#" target="_blank"
+    style="display:inline-flex;align-items:center;gap:.6rem;
+    padding:.9rem 2rem;background:#f59e0b;color:#0f172a;
+    border-radius:999px;font-family:'Cairo',sans-serif;
+    font-size:.9rem;font-weight:900;text-decoration:none;transition:all .2s">
+    اضغط هنا إذا لم يفتح الرابط تلقائياً →
+  </a>
+
+  <p style="font-size:.65rem;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.15em">
+    سيتم النقل خلال ثوانٍ...
+  </p>
+</div>
+
+<main>
+
+  <!-- JOIN MODAL -->
+  <div id="join-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.98);z-index:300;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(10px)">
+    <div style="background:var(--white);color:var(--slate-900);padding:3rem;border-radius:2rem;max-width:420px;width:100%;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5)">
+      <div style="width:64px;height:64px;background:var(--green-light);color:var(--green);border-radius:1.5rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:1.5rem">👤</div>
+      <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:.5rem;color:var(--slate-900)">مرحباً بك في القاعة 👋</h2>
+      <p style="font-size:.85rem;color:var(--slate-500);margin-bottom:2rem;font-weight:700;line-height:1.6">ادخل اسمك بالكامل للانضمام للحصة وتسجيل حضورك في سجلات المدرس</p>
+      <input type="text" id="student-name-input" placeholder="اكتب اسمك هنا..." 
+        style="width:100%;padding:1.25rem;border:2.5px solid var(--slate-100);border-radius:1.25rem;margin-bottom:1.5rem;font-family:'Cairo';font-weight:700;outline:none;text-align:center;font-size:1rem;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--slate-100)'">
+      <button id="confirm-join-btn" class="btn btn-primary" style="width:100%;padding:1.25rem;font-size:1.1rem">دخول القاعة وتسجيل الحضور</button>
+    </div>
+  </div>
+
+  <!-- WARNING BANNER -->
+  <div id="warning-banner">
+    ⚠️ تنبيه: ستنتقل للجلسة التالية خلال دقيقة واحدة — استعد!
+  </div>
+
+  <!-- TIMER CARD -->
+  <div class="timer-card" id="timer-section">
+    <div class="timer-label" id="timer-label">الجلسة الحالية تنتهي بعد</div>
+    <div class="timer-display" id="timer">--:--</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="timer-label" id="session-counter">جلسة 1 من 2</div>
+  </div>
+
+  <!-- SESSION STEPS -->
+  <div class="sessions-row" id="sessions-row"></div>
+
+  <!-- ACTION CARD -->
+  <div class="action-card" id="action-card">
+    <h2 id="action-title">جلسة الحصة مباشرة الآن</h2>
+    <p id="action-subtitle">انقر للانضمام – الجلسة الحالية نشطة</p>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+      <a id="join-btn" href="#" target="_blank" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+        انضم للجلسة الآن
+      </a>
+      <a id="fallback-btn" href="#" target="_blank" class="btn btn-outline">
+        لم يتم نقلي تلقائياً؟ اضغط هنا
+      </a>
+    </div>
+  </div>
+
+  <!-- ENDED VIEW -->
+  <div id="ended-view">
+    <div class="ended-icon">✅</div>
+    <h1>انتهت الحصة بنجاح!</h1>
+    <p>شكراً على حضورك وتفاعلك. نتمنى أن تكون قد استفدت. إلى اللقاء في الحصة القادمة!</p>
+  </div>
+
+</main>
+
+<script type="module">
+import common from './common.js';
+/**
+ * ═══════════════════════════════════════════════════════
+ *  AUTO SESSION SWITCHING SYSTEM — Eljnina
+ *  Vanilla JS | No frameworks | Fully commented
+ * ═══════════════════════════════════════════════════════
+ */
+
+// ─── 1. SESSION CONFIGURATION ───────────────────────────
+// Read sessions from URL params injected by manage.html, or use defaults.
+// URL format: ?teacher=ID&s1=LINK&d1=MINS&s2=LINK&d2=MINS ...
+
+function loadSessionsFromURL() {
+  const p = new URLSearchParams(window.location.search);
+  const sessions = [];
+  let i = 1;
+  while (p.get(`s${i}`)) {
+    sessions.push({
+      label: p.get(`l${i}`) || `جلسة ${i}`,
+      link: p.get(`s${i}`), 
+      duration: parseInt(p.get(`d${i}`) || '40', 10) 
+    });
+    i++;
+  }
+  return sessions.length ? sessions : DEFAULT_SESSIONS;
+}
+
+// Fallback example config (teacher sets via manage panel)
+const DEFAULT_SESSIONS = [
+  { label: 'جلسة 1', link: 'https://zoom.us/j/111111111', duration: 40 },
+  { label: 'جلسة 2', link: 'https://zoom.us/j/222222222', duration: 40 }
+];
+
+// ─── 2. STATE & CONTEXT ──────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const teacherId = urlParams.get('teacher') || 'demo';
+const classId   = urlParams.get('cid') || 'default';
+const STORAGE_KEY = `eljnina_session_state_${teacherId}_${classId}`;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function saveState(st) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
+}
+
+function clearState() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+let state = null;
+let sessions = []; // Populated in initClassroom
+
+async function initClassroom() {
+  const cid = urlParams.get('cid');
+  const teacherFromUrl = urlParams.get('teacher');
+  
+  timerEl.textContent = 'جاري التحميل...';
+  
+  await common.initSupabase();
+  if (common.supabase) {
+    const { data: teacher } = await common.supabase.from('teachers').select('name').eq('id', teacherId).single();
+    if (teacher) {
+      navTeacher.textContent = 'حصة ' + teacher.name;
+      document.title = 'القاعة – ' + teacher.name;
+    }
+  }
+
+  if (cid && common.supabase) {
+    console.log("Fetching Class ID:", cid);
+    const { data, error } = await common.supabase.from('classes').select('*').eq('id', cid).single();
+    if (data) {
+      sessions = data.sessions;
+      console.log("Sessions Loaded:", sessions.length);
+      
+      const serverStartTime = new Date(data.created_at).getTime();
+      
+      state = { 
+        currentIndex: 0, 
+        startTime: serverStartTime
+      };
+      saveState(state); 
+      console.log("Classroom Synced with Server. StartTime:", data.created_at);
+    } else {
+      console.warn("Class not found in DB or error:", error);
+      sessions = loadSessionsFromURL();
+    }
+  } else {
+    sessions = loadSessionsFromURL();
+  }
+
+  if (!state) {
+    state = loadState() || { currentIndex: 0, startTime: Date.now() };
+  }
+
+  if (sessions.length === 0) {
+    timerEl.textContent = 'خطأ: لا توجد جلسات متاحة';
+    return;
+  }
+
+  // Attendance Check
+  const savedName = localStorage.getItem('eljnina_student_name');
+  if (!savedName) {
+    document.getElementById('join-modal').style.display = 'flex';
+  } else {
+    logAttendance(savedName);
+  }
+
+  // Bootstrap components
+  if (teacherId && teacherId !== 'demo') {
+    navTeacher.textContent = 'حصة ' + teacherId;
+    document.title = 'القاعة – ' + teacherId;
+  }
+  
+  console.log("Bootstrapping Classroom with", sessions.length, "sessions");
+  renderPills(state.currentIndex);
+  switchToSession(state.currentIndex);
+  
+  // Start loop
+  tick();
+  setInterval(tick, 1000);
+}
+
+async function logAttendance(name) {
+  const cid = urlParams.get('cid');
+  if (cid && common.supabase && name) {
+    await common.supabase.from('attendance').insert([{
+      class_id: cid,
+      student_name: name
+    }]);
+  }
+}
+
+document.getElementById('confirm-join-btn').onclick = () => {
+  const name = document.getElementById('student-name-input').value.trim();
+  if (name.length < 3) {
+    alert("يرجى إدخال اسمك بالكامل");
+    return;
+  }
+  localStorage.setItem('eljnina_student_name', name);
+  document.getElementById('join-modal').style.display = 'none';
+  logAttendance(name);
+};
+
+// Start everything
+
+
+// ─── 4. DOM REFS ─────────────────────────────────────────
+const timerEl      = document.getElementById('timer');
+const timerLabel   = document.getElementById('timer-label');
+const progressFill = document.getElementById('progress-fill');
+const sessionCounter = document.getElementById('session-counter');
+const sessionsRow  = document.getElementById('sessions-row');
+const joinBtn      = document.getElementById('join-btn');
+const fallbackBtn  = document.getElementById('fallback-btn');
+const actionTitle  = document.getElementById('action-title');
+const actionSub    = document.getElementById('action-subtitle');
+const warningBanner = document.getElementById('warning-banner');
+const switchOverlay = document.getElementById('switch-overlay');
+const overlayMsg   = document.getElementById('overlay-msg');
+const overlayManualBtn = document.getElementById('overlay-manual-btn');
+const endedView    = document.getElementById('ended-view');
+const timerSection = document.getElementById('timer-section');
+const actionCard   = document.getElementById('action-card');
+const navTeacher   = document.getElementById('nav-teacher-name');
+
+// Teacher name handled in initClassroom
+
+// ─── 6. BUILD SESSION PILLS ──────────────────────────────
+function renderPills(activeIdx) {
+  sessionsRow.innerHTML = '';
+  sessions.forEach((sess, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'session-pill ' +
+      (idx < activeIdx ? 'done' : idx === activeIdx ? 'active' : 'upcoming');
+    pill.style.cursor = 'pointer';
+    pill.title = "اضغط للانتقال لهذا الرابط يدوياً";
+    pill.onclick = () => {
+        if (confirm(`هل تريد الانتقال إلى ${sess.label} الآن؟`)) {
+            window.location.href = sess.link;
+        }
+    };
+    pill.innerHTML = `
+      <div class="pill-num">${idx < activeIdx ? '✓' : idx + 1}</div>
+      ${sess.label} (${sess.duration} دقيقة)
+    `;
+    sessionsRow.appendChild(pill);
+  });
+}
+
+// ─── 7. COMPUTE CURRENT SESSION FROM ELAPSED TIME ────────
+function computeCurrentSession() {
+  const elapsed = Date.now() - state.startTime; // ms since start
+  
+  if (elapsed < 0) {
+    // Class hasn't started yet (clock sync or early join)
+    return { index: 0, remaining: Math.abs(elapsed), total: sessions[0].duration * 60 * 1000, notStarted: true };
+  }
+
+  let accumulated = 0;
+  for (let i = 0; i < sessions.length; i++) {
+    accumulated += sessions[i].duration * 60 * 1000;
+    if (elapsed < accumulated) {
+      const prevAccumulated = accumulated - sessions[i].duration * 60 * 1000;
+      const sessionElapsed = elapsed - prevAccumulated;
+      const sessionTotal = sessions[i].duration * 60 * 1000;
+      const remaining = sessionTotal - sessionElapsed;
+      return { index: i, remaining, total: sessionTotal, notStarted: false };
+    }
+  }
+  return null; // all sessions ended
+}
+
+// ─── 8. SWITCH TO SESSION ────────────────────────────────
+let switchingNow = false;
+
+function switchToSession(index) {
+  if (index >= sessions.length) { showEnded(); return; }
+
+  const sess = sessions[index];
+  state.currentIndex = index;
+  saveState(state);
+
+  // Update action card
+  actionTitle.textContent = `${sess.label} — جارية الآن`;
+  actionSub.textContent = `انقر للانضمام بمجرد بدء المدرس`;
+  joinBtn.href = sess.link;
+  fallbackBtn.href = sess.link;
+  overlayManualBtn.href = sess.link;
+
+  renderPills(index);
+  sessionCounter.textContent = `جلسة ${index + 1} من ${sessions.length}`;
+}
+
+// ─── 9. SHOW ENDED STATE ─────────────────────────────────
+function showEnded() {
+  timerSection.style.display = 'none';
+  sessionsRow.style.display = 'none';
+  actionCard.style.display = 'none';
+  warningBanner.style.display = 'none';
+  switchOverlay.style.display = 'none';
+  endedView.style.display = 'flex';
+  clearState();
+}
+
+// ─── 10. SHOW SWITCH OVERLAY ─────────────────────────────
+function showSwitchOverlay(nextIndex) {
+  if (switchingNow) return;
+  switchingNow = true;
+
+  const nextSess = sessions[nextIndex];
+  overlayMsg.textContent = nextSess
+    ? `جاري نقلك إلى ${nextSess.label} — سيفتح الرابط خلال ثوانٍ.`
+    : 'لا توجد جلسات إضافية.';
+
+  if (nextSess) overlayManualBtn.href = nextSess.link;
+  switchOverlay.style.display = 'flex';
+
+  // Auto redirect after 3 seconds
+  setTimeout(() => {
+    if (nextSess) {
+      window.location.href = nextSess.link;
+    }
+    switchOverlay.style.display = 'none';
+    switchingNow = false;
+    if (!nextSess) showEnded();
+  }, 3000);
+}
+
+// ─── 11. FORMAT TIME ─────────────────────────────────────
+function formatTime(ms) {
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+  const s = (totalSec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// ─── 12. MAIN TICK LOOP ──────────────────────────────────
+let warnedForCurrentSession = false;
+let lastSessionIndex = -1;
+
+function tick() {
+  const result = computeCurrentSession();
+
+  // All sessions ended
+  if (!result) { showEnded(); return; }
+
+  const { index, remaining, total, notStarted } = result;
+
+  // Detect session change
+  if (index !== lastSessionIndex) {
+    lastSessionIndex = index;
+    warnedForCurrentSession = false;
+    switchToSession(index);
+  }
+
+  // Update timer display
+  timerEl.textContent = formatTime(remaining);
+
+  if (notStarted) {
+    timerEl.className = 'timer-display';
+    progressFill.style.width = '0%';
+    timerLabel.textContent = 'الحصة ستبدأ خلال';
+    actionTitle.textContent = 'الاستعداد لبدء الحصة';
+    actionSub.textContent = 'بانتظار وصول المدرس وبدء البث';
+    return;
+  }
+
+  // Progress bar (fills as time runs out — shows urgency)
+  const pct = ((total - remaining) / total) * 100;
+  progressFill.style.width = pct + '%';
+
+  // Visual urgency states
+  const remSec = remaining / 1000;
+  if (remSec <= 60) {
+    timerEl.className = 'timer-display critical';
+    progressFill.className = 'progress-fill critical';
+    timerLabel.textContent = '⚠️ الجلسة تنتهي قريباً جداً!';
+  } else if (remSec <= 5 * 60) {
+    timerEl.className = 'timer-display warning';
+    progressFill.className = 'progress-fill warning';
+    timerLabel.textContent = 'الوقت المتبقي للجلسة';
+  } else {
+    timerEl.className = 'timer-display';
+    progressFill.className = 'progress-fill';
+    timerLabel.textContent = 'الجلسة الحالية تنتهي بعد';
+  }
+
+  // ── PRE-SWITCH WARNING (1 minute before) ──
+  if (remSec <= 60 && remSec > 3 && !warnedForCurrentSession) {
+    warnedForCurrentSession = true;
+    warningBanner.style.display = 'block';
+    // Hide banner after 30s
+    setTimeout(() => { warningBanner.style.display = 'none'; }, 30000);
+  }
+
+  // ── TRIGGER SWITCH (last 3 seconds) ──
+  if (remSec <= 3 && !switchingNow) {
+    const nextIndex = index + 1;
+    if (nextIndex < sessions.length) {
+      showSwitchOverlay(nextIndex);
+    } else {
+      showEnded();
+    }
+  }
+}
+
+// ─── 13. BOOTSTRAP ───────────────────────────────────────
+// Initialized via initClassroom() above asyncly
+initClassroom();
+</script>
+</body>
+</html>

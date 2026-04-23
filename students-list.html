@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الطلاب - Eljnina</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col pt-8 lg:pt-12">
+
+    <main class="flex-1 pb-12 px-8 max-w-7xl mx-auto w-full">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+            <div>
+                <h2 class="text-4xl font-black text-slate-900 tracking-tighter italic">إدارة <span class="text-emerald-500">الطلاب</span></h2>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2" id="teacher-name-heading">قائمة الطلاب المسجلين في منصتك</p>
+            </div>
+            
+            <div class="relative w-full md:w-96">
+                <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" placeholder="ابحث عن اسم أو رقم واتساب..." 
+                    class="w-full pr-14 pl-6 py-4 bg-white border-2 border-slate-100 rounded-[2rem] focus:border-emerald-500 outline-none transition-all font-bold shadow-sm">
+            </div>
+        </div>
+
+        <div class="glass-card rounded-[3rem] overflow-hidden shadow-xl border border-slate-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+                            <th class="px-8 py-5">اسم الطالب</th>
+                            <th class="px-8 py-5">رقم الواتساب</th>
+                            <th class="px-8 py-5">تاريخ التسجيل</th>
+                            <th class="px-8 py-5 text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-table-body" class="divide-y divide-slate-100">
+                        <!-- Content loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="empty-state" class="hidden p-20 text-center">
+                <div class="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-users-slash text-3xl"></i>
+                </div>
+                <p class="text-slate-500 font-bold">لا يوجد طلاب مطابقين للبحث حالياً.</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script type="module">
+        import common from './common.js';
+        
+        const params = new URLSearchParams(window.location.search);
+        const teacherId = params.get('teacher');
+        let allStudents = [];
+
+        // Security Check
+        const authorizedId = localStorage.getItem('eljnina_admin_id');
+        if (authorizedId !== teacherId) {
+            window.location.href = 'start.html';
+        }
+
+        async function init() {
+            common.injectFooter();
+            
+            // Fetch Teacher Name
+            const { data: teacher } = await common.supabase.from('teachers').select('name').eq('id', teacherId).single();
+            if (teacher) {
+                document.getElementById('teacher-name-heading').innerText = `قائمة طلاب ${teacher.name}`;
+                common.injectSidebar('students-list', teacher.name);
+            } else {
+                common.injectSidebar('students-list');
+            }
+
+            fetchStudents();
+        }
+
+        async function fetchStudents() {
+            const { data, error } = await common.supabase
+                .from('students')
+                .select('*')
+                .eq('teacher_id', teacherId)
+                .order('created_at', { ascending: false });
+
+            if (!error) {
+                allStudents = data;
+                renderStudents(allStudents);
+            }
+        }
+
+        function renderStudents(list) {
+            const tbody = document.getElementById('students-table-body');
+            const empty = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            list.forEach(student => {
+                const date = new Date(student.created_at).toLocaleDateString('ar-EG');
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-8 py-6 font-bold text-slate-700">${student.name}</td>
+                    <td class="px-8 py-6 font-mono text-slate-500">${student.whatsapp}</td>
+                    <td class="px-8 py-6 text-slate-400 text-xs">${date}</td>
+                    <td class="px-8 py-6 text-center">
+                        <button onclick="deleteStudent(${student.id})" class="text-red-400 hover:text-red-600 transition-colors p-2">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Search logic
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allStudents.filter(s => 
+                s.name.toLowerCase().includes(term) || 
+                s.whatsapp.includes(term)
+            );
+            renderStudents(filtered);
+        });
+
+        // Global Delete Function
+        window.deleteStudent = async (id) => {
+            if (!confirm('هل أنت متأكد من حذف هذا الطالب نهائياً؟')) return;
+            
+            const { error } = await common.supabase.from('students').delete().eq('id', id);
+            if (!error) {
+                allStudents = allStudents.filter(s => s.id !== id);
+                renderStudents(allStudents);
+            } else {
+                alert('فشل الحذف: ' + error.message);
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>
